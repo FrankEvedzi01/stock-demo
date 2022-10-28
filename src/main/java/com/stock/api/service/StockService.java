@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.stock.api.model.StatusResponse;
 import com.stock.api.model.StockDetails;
+import com.stock.api.model.StockDetailsBulkRequest;
 import com.stock.api.model.StockDetailsResponse;
 import com.stock.api.utilities.JsonHelper;
 
@@ -48,13 +50,14 @@ public class StockService {
 	 * @param details
 	 * @return
 	 */
-	public String bulkUpload(List<StockDetails> details) {
+	public StatusResponse  bulkUpload(StockDetailsBulkRequest req) {
 		try {
-			String jsonStr = JsonHelper.toJSONList(details);
+			String jsonStr = JsonHelper.toJSONList(req.getDetails());
 			String path = JsonHelper.writeToCSVFileFromJson(jsonStr, false, CSV_PATH, "csv");
-			return HttpStatus.CREATED + " : File is successfull uploaded to ==> folder " + path;
+			
+			return new StatusResponse(HttpStatus.CREATED + "", "File is successfull uploaded to ==> folder " + path);
 		} catch (IOException e) {
-			return HttpStatus.INTERNAL_SERVER_ERROR + "";
+			return new StatusResponse(HttpStatus.INTERNAL_SERVER_ERROR + "", e.getMessage());
 		}
 	}
 
