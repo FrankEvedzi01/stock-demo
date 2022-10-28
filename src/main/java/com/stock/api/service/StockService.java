@@ -45,9 +45,8 @@ public class StockService {
 	}
 
 	/**
-	 * Bulk upload to a file and return file location.
-	 * 
-	 * @param details
+	 *  Bulk upload to a file and return file location.
+	 * @param req
 	 * @return
 	 */
 	public StatusResponse  bulkUpload(StockDetailsBulkRequest req) {
@@ -74,8 +73,8 @@ public class StockService {
 		response.setDetails(dtList);
 		try {
 			String jsonStr = JsonHelper.toJSONList(dtList);
-			JsonHelper.getJsonDataToCSVSTRING(jsonStr, CSV_PATH_EXISTING);
-			JsonHelper.writeAndAppendToCSV("originalCVSFile", "newString");
+			String csv = JsonHelper.getJsonDataToCSVSTRING(jsonStr, CSV_PATH_EXISTING);
+			JsonHelper.writeAndAppendToCSV(CSV_PATH_EXISTING, csv);
 
 			response.setStatus(HttpStatus.CREATED + "");
 
