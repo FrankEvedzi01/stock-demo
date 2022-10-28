@@ -54,6 +54,10 @@ public class StockDetails {
 	
 	
 
+	public StockDetails() {
+		
+	}
+
 	public StockDetails(String quarter, String stock, String date, String open, String high, String low, String close,
 			String volume, String percentChangePrice, String percentChangeVolumeOverLastWk, String previousWeeksVolume,
 			String nextWeeksOpen, String nextWeeksClose, String percentChangeNextWeeksPrice, String daysToNextDividend,
