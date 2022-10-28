@@ -1,17 +1,17 @@
 package com.stock.api.controller;
 
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.stock.api.model.StatusResponse;
 import com.stock.api.model.StockDetails;
+import com.stock.api.model.StockDetailsBulkRequest;
 import com.stock.api.model.StockDetailsResponse;
 import com.stock.api.service.StockService;
 
@@ -33,8 +33,15 @@ public class StockController {
 	}  
 	
 	@PostMapping("/bulk-insert")
-	public String bulkUpload(@RequestBody @JsonFormat(with=JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY) List<StockDetails> details) {	
-		return stockService.bulkUpload(details);
+	public StatusResponse  bulkUpload(@RequestBody StockDetailsBulkRequest request) {	
+		StatusResponse  response = new StatusResponse();
+		if (null == request || request.getDetails().isEmpty() || request.getDetails().size()==0 ) {
+			response.setErrorMessage("Incoming Data is empty, please check your data.");
+			response.setStatus(HttpStatus.BAD_REQUEST+"");
+			
+			return response;
+		}
+		return stockService.bulkUpload(request);
 
 	}
 	
