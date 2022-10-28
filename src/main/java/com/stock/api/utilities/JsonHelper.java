@@ -9,13 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.ctc.wstx.shaded.msv_core.datatype.xsd.Comparator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -25,9 +23,6 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema.Builder;
 import com.stock.api.model.StockDetails;
-
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class JsonHelper {
 	
@@ -99,8 +94,6 @@ public class JsonHelper {
 		csvMapper.writerFor(JsonNode.class).with(csvSchema).writeValue(new File(createdFilePath),
 				jsonTree);
 		
-		String test = csvMapper.writerFor(JsonNode.class).with(csvSchema).writeValueAsString(jsonTree);
-		
 		return createdFilePath;
 
 	}
@@ -130,8 +123,9 @@ public class JsonHelper {
 	 * @param directoryOutputPath
 	 * @param ext
 	 * @return
+	 * @throws IOException 
 	 */
-	public static String isFilePathExist(String directoryOutputPath, String ext) {
+	public static String isFilePathExist(String directoryOutputPath, String ext) throws IOException {
 		UUID uuid = UUID.randomUUID();
 		String directoryName = directoryOutputPath;
 		String fileName = uuid + "." + ext;
@@ -142,11 +136,11 @@ public class JsonHelper {
 		}
 
 		File file = new File(directoryName + "/" + fileName);
-		if (file.exists()) {
-			return file.getAbsolutePath();
+		if (!file.exists()) {
+			file.createNewFile();
 		}
 
-		return directoryOutputPath;
+		return directoryOutputPath + "/" + fileName;
 	}
 
 	/**
@@ -158,6 +152,7 @@ public class JsonHelper {
 	 */
 	public static String toJSONList(List<StockDetails> list) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
+		
 		objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
 		return objectMapper.writeValueAsString(list);
 	}
