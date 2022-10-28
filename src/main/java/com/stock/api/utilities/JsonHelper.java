@@ -56,8 +56,7 @@ public class JsonHelper {
 
 	/**
 	 * This method receives to file paths (input and out and write process.
-	 *
-	 * @param inputPilePath
+	 * @param inputFilePath
 	 * @param outputFilePath
 	 * @throws IOException
 	 */
