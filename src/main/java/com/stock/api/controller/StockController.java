@@ -1,21 +1,15 @@
 package com.stock.api.controller;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.stock.api.model.StatusResponse;
 import com.stock.api.model.StockDetails;
 import com.stock.api.model.StockDetailsBulkRequest;
 import com.stock.api.model.StockDetailsResponse;
 import com.stock.api.service.StockService;
-
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 
 
@@ -23,16 +17,19 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 @RequestMapping("/api/stock-data")
 public class StockController {
 	
-	@Autowired
-	private StockService stockService;
+	private final StockService stockService;
 
-	@GetMapping("/{stock}")
+	public StockController(StockService stockService) {
+		this.stockService = stockService;
+	}
+
+	@GetMapping(value = "/{stock}", produces = {MediaType.APPLICATION_JSON_VALUE})
 	public StockDetailsResponse getStockData(@PathVariable("stock") String stock) {
 		
 		return stockService.getStockData(stock) ;
 	}  
 	
-	@PostMapping("/bulk-insert")
+	@PostMapping(value="/bulk-insert", produces = {MediaType.APPLICATION_JSON_VALUE})
 	public StatusResponse  bulkUpload(@RequestBody StockDetailsBulkRequest request) {
 		StatusResponse  response = new StatusResponse();
 		if (null == request || request.getDetails().isEmpty() || request.getDetails().size()==0 ) {
@@ -44,7 +41,7 @@ public class StockController {
 		return stockService.bulkUpload(request);
 
 	}
-	@PostMapping("/bulk-insert/bulk/{missingLoad}")
+	@PostMapping(value="/bulk-insert/bulk/{missingLoad}" , produces = {MediaType.APPLICATION_JSON_VALUE})
 	public StatusResponse  bulkUploadJson(@PathVariable String  missingLoad) {
 		StatusResponse  response = new StatusResponse();
 		if (null == missingLoad ) {
@@ -55,7 +52,7 @@ public class StockController {
 		return stockService.bulkUploadJson(missingLoad);
 
 	}
-	@PostMapping("/")
+	@PostMapping(value="/" , produces = {MediaType.APPLICATION_JSON_VALUE})
 	public  StockDetailsResponse  addStockData(@RequestBody StockDetails data) {
 		return stockService.addStockData(data);
 	}
