@@ -1,55 +1,72 @@
 package com.stock.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.opencsv.bean.CsvBindByPosition;
 
 public class StockDetails {
 	
 	@JsonProperty("quarter")
+	@CsvBindByPosition(position = 0)
 	private String quarter;
 	
-	@JsonProperty("stock")
+	@JsonProperty(value = "stock", required = true)
+	@CsvBindByPosition(position = 1)
 	private String stock;
 	
 	@JsonProperty("date")
+	@CsvBindByPosition(position = 2)
 	private String date;
 	
 	@JsonProperty("open")
+	@CsvBindByPosition(position = 3)
 	private String open;
 	
 	@JsonProperty("high")
+	@CsvBindByPosition(position = 4)
 	private String high;
 	
 	@JsonProperty("low")
+	@CsvBindByPosition(position = 5)
 	private String low;
 	
 	@JsonProperty("close")
+	@CsvBindByPosition(position = 6)
 	private String close;
 	
 	@JsonProperty("volume")
+	@CsvBindByPosition(position = 7)
 	private String volume;
 	
 	@JsonProperty("percent_change_price")
+	@CsvBindByPosition(position = 8)
 	private String percentChangePrice;
 	
 	@JsonProperty("percent_change_volume_over_last_wk")
+	@CsvBindByPosition(position = 9)
 	private String percentChangeVolumeOverLastWk;
 	
 	@JsonProperty("previous_weeks_volume")
+	@CsvBindByPosition(position = 10)
 	private String previousWeeksVolume;	
 	
 	@JsonProperty("next_weeks_open")
+	@CsvBindByPosition(position = 11)
 	private String nextWeeksOpen;
 	
 	@JsonProperty("next_weeks_close")
+	@CsvBindByPosition(position = 12)
 	private String nextWeeksClose;
 	
 	@JsonProperty("percent_change_next_weeks_price")
+	@CsvBindByPosition(position = 13)
 	private String percentChangeNextWeeksPrice;
 	
 	@JsonProperty("days_to_next_dividend")
+	@CsvBindByPosition(position = 14)
 	private String daysToNextDividend;	
 	
 	@JsonProperty("percent_return_next_dividend")
+	@CsvBindByPosition(position = 15)
 	private String percentReturnNextDividend;
 	
 	
