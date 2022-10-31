@@ -1,5 +1,14 @@
 package com.stock.api.utilities;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema.Builder;
+import com.stock.api.model.StockDetails;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -7,86 +16,28 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema.Builder;
-import com.stock.api.model.StockDetails;
+import java.util.*;
 
 public class JsonHelper {
-	
-	/**
-	 *This method reads from the flat file and create Map Objects.
-	 *
-	 * @param file
-	 * @return
-	 * @throws IOException
-	 */
-	public static List<Map<?, ?>> readObjectDataFromCsv(File file) throws IOException {
-		CsvSchema csvSchema = CsvSchema.emptySchema().withHeader();
-		CsvMapper csvMapper = new CsvMapper();
-		try (MappingIterator<Map<?, ?>> mappingIterator = csvMapper.readerFor(Map.class).with(csvSchema)
-				.readValues(file)) {
-			return mappingIterator.readAll();
-		}
-	}
 
 	/**
-	 *This method takes map objects as input converts to json and write to system file.
-	 *
-	 * @param data
-	 * @param file
-	 * @throws IOException
-	 */
-	public static void writeDataObjectJson(List<Map<?, ?>> data, File file) throws IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.writeValue(file, data);
-	}
-
-	/**
-	 * This method receives to file paths (input and out and write process.
-	 * @param inputFilePath
-	 * @param outputFilePath
-	 * @throws IOException
-	 */
-	public static void processToJson(String inputFilePath, String outputFilePath) throws IOException {
-		File input = new File(inputFilePath);
-		File output = new File(outputFilePath);
-		List<Map<?, ?>> data = readObjectDataFromCsv(input);
-		writeDataObjectJson(data, output);
-	}
-
-	/**
-	 * This method take jsonnInput file data and converts to delimited csv file.
+	 * This method take jsonInput file data and converts to delimited csv file.
 	 * 
-	 * @param jsonArrayString
-	 * @param isJsonFilePath
-	 * @param csvOutputFilePath
-	 * @param ext
-	 * @return
-	 * @throws IOException
+	 * @param jsonArrayString jsonArrayString
+	 * @param isJsonFilePath isJsonFilePath
+	 * @param csvOutputFilePath csvOutputFilePath
+	 * @param ext ext
+	 * @return String Object
+	 * @throws IOException IOException
 	 */
 	public static String  writeToCSVFileFromJson(String jsonArrayString, boolean isJsonFilePath, String csvOutputFilePath, String ext)
 			throws IOException {
 		JsonNode jsonTree = isJsonFilePath ? new ObjectMapper().readTree(new File(jsonArrayString)):
 							new ObjectMapper().readTree(jsonArrayString);
-		
+
 		Builder csvSchemaBuilder = CsvSchema.builder();
 		JsonNode firstObject = jsonTree.elements().next();
-		firstObject.fieldNames().forEachRemaining(fieldName -> {
-			csvSchemaBuilder.addColumn(fieldName);
-		});
+		firstObject.fieldNames().forEachRemaining(csvSchemaBuilder::addColumn);
 		CsvSchema csvSchema = csvSchemaBuilder.build().withHeader();
 		CsvMapper csvMapper = new CsvMapper();
 		String createdFilePath = isFilePathExist(csvOutputFilePath, ext);
@@ -98,42 +49,41 @@ public class JsonHelper {
 	}
 
 	/**
-	 * This method take csv input  file data and converts to json file.
-	 * 
-	 * @param csvInputFilePath
-	 * @param jsonOutputFilePath
-	 * @throws IOException
+	 * This method get StockDetails object list from json string.
+	 *
+	 * @param jsonArrayString Json Object
+	 * @return String Object
+	 * @throws IOException IOException
 	 */
-	public static void writeToJSONFromDelimitedFlatFile(String csvInputFilePath, String jsonOutputFilePath)
+	public static List<StockDetails>  jsonToPojo(String jsonArrayString)
 			throws IOException {
-		CsvSchema stockSchema = CsvSchema.emptySchema().withHeader();
-		CsvMapper csvMapper = new CsvMapper();
-		MappingIterator<StockDetails> stockList = csvMapper.readerFor(StockDetails.class).with(stockSchema)
-				.readValues(new File(csvInputFilePath));
+		List<StockDetails> list = new ArrayList<>();
+		ObjectMapper objectMapper = new ObjectMapper();
+		StockDetails details = objectMapper.readValue(jsonArrayString, StockDetails.class);
+       list.add(details);
+		return list;
 
-		new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true).writeValue(new File(jsonOutputFilePath),
-				stockList.readAll());
 	}
 
 	/**
-	 * This method is used to create a new file path if doesn't exist. A get a new file name for
-	 * data bulk upload.
+	 * This method is used to create a new file path.
 	 * 
-	 * @param directoryOutputPath
-	 * @param ext
-	 * @return
-	 * @throws IOException 
+	 * @param directoryOutputPath directoryOutputPath
+	 * @param ext ext
+	 * @return String
+	 * @throws IOException IoException
 	 */
+
+	@SuppressWarnings("ResultOfMethodCallIgnored")
 	public static String isFilePathExist(String directoryOutputPath, String ext) throws IOException {
 		UUID uuid = UUID.randomUUID();
-		String directoryName = directoryOutputPath;
+		ClassPathResource cp;
+		cp = new ClassPathResource(directoryOutputPath);
+		String directoryName = cp.getPath();
 		String fileName = uuid + "." + ext;
 
 		File directory = new File(directoryName);
-		if (!directory.exists()) {
-			directory.mkdir();
-		}
-
+		if (!directory.exists()) directory.mkdir();
 		File file = new File(directoryName + "/" + fileName);
 		if (!file.exists()) {
 			file.createNewFile();
@@ -145,9 +95,7 @@ public class JsonHelper {
 	/**
 	 * This method reads incoming bulk data from user and converts to json string.
 	 * 
-	 * @param list
-	 * @return
-	 * @throws IOException
+	 * @return String object
 	 */
 	public static String toJSONList(List<StockDetails> list) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -156,26 +104,13 @@ public class JsonHelper {
 		return objectMapper.writeValueAsString(list);
 	}
 
-	/**
-	 * This method reads incoming json data to obtain POJO Object list. 
-	 * 
-	 * @param arrayToJson
-	 * @return
-	 * @throws IOException
-	 */
-	public static List<StockDetails> toStockListObject(String arrayToJson) throws IOException {
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-		TypeReference<List<StockDetails>> mapType = new TypeReference<List<StockDetails>>() {
-		};
-		return objectMapper.readValue(arrayToJson, mapType);
-	}
+
 	/**
 	 * This method appends to the existing csv file
 	 * 
-	 * @param originalCVSFile
-	 * @param newString
-	 * @throws IOException
+	 * @param originalCVSFile originalCVSFile
+	 * @param newString testing
+	 * @throws  IOException IOException
 	 */
 	public static void writeAndAppendToCSV(String originalCVSFile, String newString) throws IOException {
 		FileWriter fw = new FileWriter(originalCVSFile, true);
@@ -188,12 +123,12 @@ public class JsonHelper {
 	/**
 	 * This method obtains delimited string from json node
 	 * 
-	 * @param jsonArrayString
-	 * @param csvOutputFilePath
-	 * @return
-	 * @throws IOException
+	 * @param jsonArrayString jsonArrayString
+	 * @param csvOutputFilePath csvOutputFilePath
+	 * @return String Object
+	 * @throws IOException IOException
 	 */
-	public static String  getJsonDataToCSVSTRING(String jsonArrayString, String csvOutputFilePath)
+	public static String getJsonDataToCSVString(String jsonArrayString, String csvOutputFilePath)
 			throws IOException {
 		
 		JsonNode jsonTree = new ObjectMapper().readTree(jsonArrayString);
@@ -201,9 +136,7 @@ public class JsonHelper {
 		Builder csvSchemaBuilder = CsvSchema.builder();
 		JsonNode firstObject = jsonTree.elements().next();
 	
-		firstObject.fieldNames().forEachRemaining(fieldName -> {
-			  csvSchemaBuilder.addColumn(fieldName);
-		});
+		firstObject.fieldNames().forEachRemaining(csvSchemaBuilder::addColumn);
 		
 		CsvSchema csvSchema  = csvSchemaBuilder.build();
 		
@@ -211,30 +144,33 @@ public class JsonHelper {
 			if (!isAFile(csvOutputFilePath)){
 				 csvSchema.withHeader();
 			}
-		} catch (IOException e) {}
+		} catch (IOException ignored) {}
 		
 		CsvMapper csvMapper = new CsvMapper();
 		
 		return csvMapper.writerFor(JsonNode.class).with(csvSchema).writeValueAsString(jsonTree);
 
 	}
-	
+
 	/**
-	 * Check if file exist or empty, if doesn't create it.
-	 * 
-	 * @param fileFullPath
-	 * @return
-	 * @throws IOException
+	 * Check if file exist or empty, if it doesn't create it.
+	 * @param fileFullPath fileFullPath
+	 * @return boolean
+	 * @throws IOException IOException
 	 */
 	
 	public static boolean isAFile(String fileFullPath) throws IOException {
-		File f = new File(fileFullPath);
+		boolean result = false;
+		ClassPathResource cp;
+		cp = new ClassPathResource(fileFullPath);
+		File f = new File(cp.getPath());
 		if (!f.exists()) {
 			f.createNewFile();
-			return false;
+		} else {
+			result = f.length() != 0;
 		}
 
-		return f.length() == 0 ? false : true;
+		return result;
 	}
 	
 	
@@ -242,14 +178,18 @@ public class JsonHelper {
 	 * 
 	 * This method filters the record for value passed.
 	 * 
-	 * @param filePath
-	 * @param stockValue
-	 * @return
+	 * @param filePath filePath
+	 * @param stockValue stockValue
+	 * @return List Object
 	 */
 	
 	public static List<StockDetails> processCSVFilter(String filePath, String stockValue) {
-		Path path = Paths.get(filePath);
-		if (Files.notExists(path)) {
+		Path path;
+		File f;
+		ClassPathResource cp = new ClassPathResource(filePath);
+			f = new File(cp.getPath());
+			path = Path.of(cp.getPath());
+		if (!f.exists()) {
 			throw new IllegalStateException("FSystem Error-file could not be processed: " + path);
 		}
 
@@ -265,6 +205,9 @@ public class JsonHelper {
 		for (String line : lines) {
 			if (line.trim().length() !=0 ) {
 				String[] index = line.split(",");
+				if (index[0].trim().length() == 0) {
+					continue;
+				}
 				StockDetails detail = new StockDetails(
 						index[0], index[1], index[2], index[3], index[4], index[5], index[6],
 						index[7], index[8], index[9], index[10], index[11], index[12], index[13],
@@ -273,9 +216,6 @@ public class JsonHelper {
 				stocks.add(detail);
 			}
 		}
-			
 		return stocks.stream().filter(det -> Objects.nonNull(det) && det.getStock().equalsIgnoreCase(stockValue)).toList();
-
 	}
-	
 }
